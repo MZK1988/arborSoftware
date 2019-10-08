@@ -1,10 +1,13 @@
 SELECT 
 copia.result.resultKey,
 copia.orderedpanel.orderedPanelKey,
+copia.CPT.cPTKey,
 copia.requisition.requisitionKey,
 copia.specimen.specimenKey,
 copia.test.testKey,
 copia.patient.patientKey,
+copia.orderedpanel.labFillerOrderNumber,
+copia.orderedpanel.labParentFillerOrderNumber,
 copia.Specimen.labOrderedStamp as [Lab Ordered Datetime],
 copia.Result.approvedStamp as [Result Approved Datetime],
 copia.Result.createStamp [Result Created Datetime],
@@ -45,4 +48,6 @@ FROM copia.Result
 --need to do the attachment mapping
 --need to find ordering provider!
 --need to get addresses
-WHERE copia.orderedPanel.isCancelled=0 AND copia.patient.isTestPatient=0;
+WHERE copia.orderedPanel.isCancelled=0 AND copia.patient.isTestPatient=0
+--WHERE copia.result.approvedStamp = -63082522800000;
+ORDER BY copia.result.approvedStamp;
