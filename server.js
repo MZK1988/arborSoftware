@@ -35,7 +35,9 @@ sql.connect(config).then(() => {
         LEFT JOIN copia.requisition ON copia.result.requisitionKey = copia.Requisition.requisitionKey
         LEFT JOIN copia.Patient ON copia.requisition.patientKey = copia.patient.patientKey
         LEFT JOIN copia.Panel ON copia.orderedpanel.panelKey = copia.panel.panelKey
-    WHERE copia.orderedPanel.isCancelled=0 AND copia.patient.isTestPatient=0 and copia.result.approvedStamp > 1562621408000
+    WHERE copia.orderedPanel.isCancelled=0 
+    AND copia.patient.isTestPatient=0 
+    AND copia.result.approvedStamp > 1562621408000
     ORDER BY approvedStamp`
 }).then(result => {
     console.log("done with query")
