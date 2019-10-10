@@ -4,7 +4,6 @@ const PORT = process.env.PORT || 5000;
 var moment = require('moment');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 const sql = require('mssql');
 const config = {
     user: 'mkorenvaes',
@@ -17,6 +16,7 @@ const config = {
     }
 }
 const results =[];
+//May put this whole thing in a get or scrape into the MongoDB
 sql.connect(config).then(() => {
     return sql.query`SELECT DISTINCT
     copia.OrderedPanel.labFillerOrderNumber,
@@ -49,7 +49,6 @@ sql.connect(config).then(() => {
         var orderCancelled = result.recordset[i].isCancelled
         var providerFirst = result.recordset[i].firstName
         var providerLast = result.recordset[i].lastName
-
         var terminalObject = {
             specimenNumber,
             labOrderedTime,
@@ -61,16 +60,11 @@ sql.connect(config).then(() => {
 
         results.push(terminalObject);
     }
-    
 }).catch(err => {
     console.log(err);// ... error checks
 })
 sql.on('error', err => {
     console.log(err);// ... error handler
 })
-
-
-
-app.get('/', (req, res) => res.send(results[0]));
-
+app.get('/', (req, res) => res.send(results));
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
