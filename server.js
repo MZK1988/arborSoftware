@@ -16,6 +16,7 @@ const config = {
         encrypt: true // Use this if you're on Windows Azure
     }
 }
+const results =[];
 sql.connect(config).then(() => {
     return sql.query`SELECT DISTINCT
     copia.OrderedPanel.labFillerOrderNumber,
@@ -24,8 +25,8 @@ sql.connect(config).then(() => {
     copia.OrderedPanel.labOrderedStamp,
     copia.Result.approvedStamp,
     copia.OrderedPanel.isCancelled,
-    copia.staff.firstName as [Provider First],
-    copia.staff.lastName as [Provider Last],
+    copia.staff.firstName,
+    copia.staff.lastName,
     copia.patient.firstName as [Patient First],
     copia.patient.lastName as [Patient Last]
     FROM copia.OrderedPanel
@@ -40,10 +41,27 @@ sql.connect(config).then(() => {
     AND copia.result.approvedStamp > 1562621408000
     ORDER BY approvedStamp`
 }).then(result => {
-    console.log("done with query")
-    //var dateString = moment.unix(value).format("MM/DD/YYYY");
-    //put for loop here to process into datetime, and do other data processing
-    results.push(moment.unix(result.recordset[0].approvedStamp/1000).format("DD MMM YYYY hh:mm a"),moment.unix(result.recordset[1].approvedStamp/1000).format("DD MMM YYYY hh:mm a"),moment.unix(result.recordset[2].approvedStamp/1000).format("DD MMM YYYY hh:mm a"));
+    console.log("*********done with query********************")    
+    for(i = 0; i < result.recordset.length; i++) {
+        var specimenNumber = result.recordset[i].labFillerOrderNumber
+        var labOrderedTime = moment.unix(result.recordset[i].labOrderedStamp/1000).format("DD MMM YYYY hh:mm a")
+        var approvedTime = moment.unix(result.recordset[i].approvedStamp/1000).format("DD MMM YYYY hh:mm a")
+        var orderCancelled = result.recordset[i].isCancelled
+        var providerFirst = result.recordset[i].firstName
+        var providerLast = result.recordset[i].lastName
+
+        var terminalObject = {
+            specimenNumber,
+            labOrderedTime,
+            approvedTime,
+            orderCancelled,
+            providerFirst,
+            providerLast
+        }
+
+        results.push(terminalObject);
+    }
+    
 }).catch(err => {
     console.log(err);// ... error checks
 })
@@ -51,8 +69,8 @@ sql.on('error', err => {
     console.log(err);// ... error handler
 })
 
-var results =[];
 
-app.get('/', (req, res) => res.send(results));
+
+app.get('/', (req, res) => res.send(results[0]));
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
