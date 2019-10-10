@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 5000;
-var moment = require('moment');
+const moment = require('moment');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const sql = require('mssql');
@@ -65,7 +65,7 @@ app.get('/', (req, res) => {
         var techId = result.recordset[i].techID;
         var providerFirst = result.recordset[i].firstName;
         var providerLast = result.recordset[i].lastName;
-        //*****************************Calculation of TAT**********************************************//
+        //*****************************CALCULATION OF TAT**********************************************//
         var TATMilliseconds =
           result.recordset[i].approvedStamp - result.recordset[i].orderForStamp;
         var tempTATOne = moment.duration(TATMilliseconds);
@@ -76,7 +76,7 @@ app.get('/', (req, res) => {
           tempTATOne.hours() +
           ' Minutes: ' +
           tempTATOne.minutes();
-        //*****************************Calculation of TAT**********************************************//
+        //*****************************CALCULATION OF TAT**********************************************//
         var terminalObject = {
           specimenNumber,
           panelName,
