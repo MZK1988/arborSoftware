@@ -9,7 +9,7 @@ const sql = require('mssql');
 //Connect to MongoDB
 connectDB();
 //Connect to CopiaDB
-connectCopiaDB();
+// connectCopiaDB();
 //Init Middleware
 app.use(express.json({ extended: false }));
 
@@ -110,6 +110,7 @@ app.get('/', (req, res) => {
       }
       const responseArrayOne = [];
       //trying to control for number of objects in the response array here such that Postman does not crash
+      //seems like a processing step that is unnecessary overhead
       for (i = 0; i < 100; i++) {
         responseArrayOne.push(results[i]);
       }
