@@ -2,9 +2,24 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const moment = require('moment');
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+const connectDB = require('./config/db');
+const connectCopiaDB = require('./config/copiaDb');
 const sql = require('mssql');
+
+//Connect to MongoDB
+connectDB();
+//Connect to CopiaDB
+connectCopiaDB();
+//Init Middleware
+app.use(express.json({ extended: false }));
+
+app.use(express.urlencoded({ extended: true }));
+
+//Define Routes
+app.use('/api/users', require('./routes/api/users'));
+app.use('/api/profile', require('./routes/api/profile'));
+app.use('/api/posts', require('./routes/api/posts'));
+app.use('/api/auth', require('./routes/api/auth'));
 
 //*****************************BEGINNING TERMINAL GET********************************************************************************/
 app.get('/', (req, res) => {
@@ -20,6 +35,7 @@ app.get('/', (req, res) => {
   };
   const results = [];
   //May put this whole thing in a get or scrape into the MongoDB, can put the request/user data into the
+  //Get get the request data here, store to variable, and put in SQL query using jsx ${} syntax
   sql
     .connect(config)
     .then(() => {
@@ -76,7 +92,8 @@ app.get('/', (req, res) => {
           tempTATOne.hours() +
           ' Minutes: ' +
           tempTATOne.minutes();
-        //*****************************CALCULATION OF TAT**********************************************//
+        //*****************************END CALCULATION OF TAT**********************************************//
+        //*****************************CREATION OF TERMINAL OBJECT*****************************************//
         var terminalObject = {
           specimenNumber,
           panelName,
