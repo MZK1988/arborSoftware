@@ -7,11 +7,6 @@ const ProfileSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'users'
   },
-  handle: {
-    type: String,
-    required: true,
-    max: 40
-  },
   company: {
     type: String
   },
@@ -21,6 +16,7 @@ const ProfileSchema = new Schema({
   location: {
     type: String
   },
+  //this will be changed into department + management
   status: {
     type: String,
     required: true
@@ -94,6 +90,7 @@ const ProfileSchema = new Schema({
       }
     }
   ],
+  //this goes away
   social: {
     youtube: {
       type: String
