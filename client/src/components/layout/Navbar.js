@@ -7,12 +7,12 @@ const Navbar = () => {
       <h1>
         <Link to="/">
           <i className="fas fa-code" />
-          DevConnector
+          arborSoftware
         </Link>
       </h1>
       <ul>
         <li>
-          <a href="!#">Developers</a>
+          <a href="!#">Users</a>
         </li>
         <li>
           <Link to="/register">Register</Link>
