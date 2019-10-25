@@ -1,14 +1,14 @@
 import React, { Fragment, useState } from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
-//using setAlert action =>becomes available as props
+import { Link, Redirect } from 'react-router-dom';
+//using Actions =>become available as props
 import { setAlert } from '../../actions/alert';
 import { register } from '../../actions/auth';
 import PropTypes from 'prop-types';
 
 //This is the state of the register component, which just looks like a small data model
 //Destructuring setAlert actin from props
-const Register = ({ setAlert, register }) => {
+const Register = ({ setAlert, register, isAuthenticated }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -50,6 +50,10 @@ const Register = ({ setAlert, register }) => {
       //   }
     }
   };
+
+  if (isAuthenticated) {
+    return <Redirect to="/dashboard" />;
+  }
   return (
     <Fragment>
       <h1 className="large text-primary">Sign Up</h1>
@@ -108,11 +112,14 @@ const Register = ({ setAlert, register }) => {
 
 Register.propTypes = {
   setAlert: PropTypes.func.isRequired,
-  register: PropTypes.func.isRequired
+  register: PropTypes.func.isRequired,
+  isAuthenticated: PropTypes.bool
 };
-
-//connecting to setAlert Action
+const mapStateToProps = state => ({
+  isAuthenticated: state.auth.isAuthenticated
+});
+//connecting to Actions
 export default connect(
-  null,
+  mapStateToProps,
   { setAlert, register }
 )(Register);
