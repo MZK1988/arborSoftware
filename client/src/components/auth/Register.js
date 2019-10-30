@@ -8,6 +8,7 @@ import PropTypes from 'prop-types';
 
 //This is the state of the register component, which just looks like a small data model
 //Destructuring setAlert actin from props
+//this is used in the onsubmit function
 const Register = ({ setAlert, register, isAuthenticated }) => {
   const [formData, setFormData] = useState({
     name: '',
