@@ -21,8 +21,8 @@ FROM copia.OrderedPanel
 WHERE copia.orderedPanel.isCancelled=0
 	AND copia.patient.isTestPatient=0
 	--first and last filters
-	AND copia.staff.firstName = 'Kelly'
-	AND copia.staff.lastName = 'Rising'
+	-- AND copia.staff.firstName = 'Kelly'
+	-- AND copia.staff.lastName = 'Rising'
 	--fromDate
 	AND copia.result.approvedStamp > 1570721408000
 	--toDate

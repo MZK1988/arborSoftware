@@ -8,7 +8,8 @@ import {
   AUTH_ERROR,
   LOGIN_SUCCESS,
   LOGIN_FAIL,
-  LOGOUT
+  LOGOUT,
+  CLEAR_PROFILE
 } from './types';
 //This function automatically adds teh x-auth-token header
 import setAuthToken from '../utils/setAuthToken';
@@ -41,7 +42,8 @@ export const register = ({ name, email, password }) => async dispatch => {
   };
 
   const body = JSON.stringify({ name, email, password });
-
+  //this really looks like a postman headeers using teh body, config
+  //
   try {
     const res = await axios.post('/api/users', body, config);
     dispatch({
@@ -92,5 +94,6 @@ export const login = (email, password) => async dispatch => {
 //Logout/Clear Profile
 
 export const logout = () => dispatch => {
+  dispatch({ type: CLEAR_PROFILE });
   dispatch({ type: LOGOUT });
 };
