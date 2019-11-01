@@ -79,6 +79,7 @@ router.post(
     if (skills) {
       profileFields.skills = skills.split(',').map(skill => skill.trim());
     }
+    console.log(profilefields.skills);
 
     //Build social object to insert into database
     profileFields.social = {};
