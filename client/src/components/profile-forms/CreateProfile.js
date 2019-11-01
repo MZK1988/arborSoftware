@@ -123,7 +123,6 @@ const CreateProfile = ({ createProfile, history }) => {
             type="text"
             placeholder="Github Username"
             name="githubusername"
-            name="githubusername"
             value={githubusername}
             onChange={e => onChange(e)}
           />
