@@ -16,7 +16,7 @@ const Dashboard = ({
 }) => {
   useEffect(() => {
     getCurrentProfile();
-  }, []);
+  }, [getCurrentProfile]);
 
   return loading && profile === null ? (
     <Spinner />
@@ -48,8 +48,6 @@ const Dashboard = ({
     </Fragment>
   );
 };
-
-Dashboard.propTypes = {};
 
 Dashboard.propTypes = {
   getCurrentProfile: PropTypes.func.isRequired,
