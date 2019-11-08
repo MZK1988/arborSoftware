@@ -127,6 +127,7 @@ router.get('/', async (req, res) => {
     //The populate method kind of joins the user data model/collection fields that you choose with the profile data model
     const profiles = await Profile.find().populate('user', ['name', 'avatar']);
     res.json(profiles);
+    console.log(profiles[0].website);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
