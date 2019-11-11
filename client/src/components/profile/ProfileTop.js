@@ -16,7 +16,7 @@ const ProfileTop = ({
       <img class="round-img my-1" src={avatar} alt="" />
       <h1 class="large">{name}</h1>
       <p class="lead">
-        {status}at {company && <span> at {company} </span>}
+        {status} {company && <span> at {company} </span>}
       </p>
       <p>{location && <span>{location}</span>}</p>
       <div class="icons my-1">
