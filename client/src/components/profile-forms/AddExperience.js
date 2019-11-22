@@ -27,8 +27,8 @@ const AddExperience = ({ addExperience, history }) => {
     <Fragment>
       <h1 class="large text-primary">Add An Experience</h1>
       <p class="lead">
-        <i class="fas fa-code-branch"></i> Add any developer/programming
-        positions that you have had in the past
+        <i class="fas fa-code-branch"></i> Add experiences you've had in the
+        past
       </p>
       <small>* = required field</small>
       <form

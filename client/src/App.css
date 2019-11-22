@@ -589,6 +589,10 @@ button {
   top: 60px;
 }
 
+#operationsSub {
+  color: #38a1f3;
+}
+
 /* Sidebar links */
 .sidebar a {
   display: block;
