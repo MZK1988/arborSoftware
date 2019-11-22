@@ -15,6 +15,7 @@ import Profile from "./components/profile/Profile";
 import Posts from "./components/posts/Posts";
 import Post from "./components/post/Post";
 import PrivateRoute from "./components/routing/PrivateRoute";
+import AppMenu from "./components/layout/AppMenu";
 //Redux
 import { Provider } from "react-redux";
 import store from "./store";
@@ -39,6 +40,19 @@ const App = () => {
         <Fragment>
           <Navbar />
           <Route exact path="/" component={Landing} />
+          <section className="sideMenu">
+            <Switch>
+              <Route exact path="/profiles" component={AppMenu}></Route>
+              <Route exact path="/profile/:id" component={AppMenu}></Route>
+              <Route exact path="/dashboard" component={AppMenu}></Route>
+              <PrivateRoute exact path="/create-profile" component={AppMenu} />
+              <PrivateRoute exact path="/edit-profile" component={AppMenu} />
+              <PrivateRoute exact path="/add-experience" component={AppMenu} />
+              <PrivateRoute exact path="/add-education" component={AppMenu} />
+              <PrivateRoute exact path="/posts" component={AppMenu} />
+              <PrivateRoute exact path="/post/:id" component={AppMenu} />
+            </Switch>
+          </section>
           <section className="container">
             <Alert />
             <Switch>
