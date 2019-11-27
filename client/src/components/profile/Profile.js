@@ -8,7 +8,7 @@ import ProfileAbout from './ProfileAbout';
 import ProfileExperience from './ProfileExperience';
 import ProfileEducation from './ProfileEducation';
 import { getProfileById } from '../../actions/profile';
-
+//match.params.id = userid
 const Profile = ({
   getProfileById,
   profile: { profile, loading },
