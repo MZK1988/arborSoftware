@@ -1,0 +1,5 @@
+action=>will grab the data from the route and dispatch 
+the action type to the reducer
+reducer=>will take the action type and augments the state
+with the payload from the route
+component=>will use the useEffect library 

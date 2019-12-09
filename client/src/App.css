@@ -42,7 +42,7 @@ img {
   padding: 0rem;
   margin-top: 7rem;
   margin-bottom: 3rem;
-  margin-left: 200;
+  margin-left: 15rem;
 }
 
 /* Text Styles*/
@@ -626,11 +626,15 @@ div.content {
     width: 100%;
     height: auto;
     position: relative;
+    top: 100px;
   }
   .sidebar a {
     float: left;
   }
   div.content {
+    margin-left: 0;
+  }
+  .container {
     margin-left: 0;
   }
 }
