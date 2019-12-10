@@ -8,12 +8,12 @@ const AppMenu = () => {
     <Fragment>
       <div class="sidebar">
         <Link to="/dashboard">Home</Link>
-        <a href="#news" onClick={() => toggleSubMenus(!displaySubMenus)}>
+        <a href="#" onClick={() => toggleSubMenus(!displaySubMenus)}>
           Operations
         </a>
         {displaySubMenus && (
           <Fragment>
-            <Link to="#news" id="operationsSub">
+            <Link to="/terminal" id="operationsSub">
               > Terminal
             </Link>
 
