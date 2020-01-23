@@ -5,9 +5,149 @@ const auth = require("../../middleware/auth");
 const sql = require("mssql");
 const moment = require("moment");
 
+// @route GET api/copiaDb/terminal/tatDateSort
+// @desc  GET Average TAT Accross All Departments
+// @access Private
+
+//end goal to create object like this:
+//tatObject = {
+//  this week: single total hours value
+//  last week: single total hours value
+//  last month: single total hours value
+//  last qtr: single total hours value
+//  last yr: single total hours value
+//}
+router.get(
+  "/terminal/tatDateSort",
+  [
+    auth,
+    [
+      //this will likely be changed into department
+      check("fromDate", "From Date is required")
+        .not()
+        .isEmpty(),
+      //this will likely be changed into a custom tailored list of specialties
+      check("toDate", "To Date is Required")
+        .not()
+        .isEmpty()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { fromDate, toDate } = req.body;
+
+    //format intake time to Unix milliseconds using moment
+    const fromDateUnix = moment(fromDate, "M/D/YYYY H:mm")
+      .valueOf()
+      .toString();
+    const toDateUnix = moment(toDate, "M/D/YYYY H:mm")
+      .valueOf()
+      .toString();
+    //If we still have to use sql database, then we request that everyone on management team have respective credentials?
+    try {
+      await sql.connect("mssql://Mkorenvaes:oPB2zh@1!t@192.168.191.236/copia");
+      let terminalQuery = await sql.query`SELECT DISTINCT
+      copia.OrderedPanel.labFillerOrderNumber,
+      copia.panel.name,
+      copia.OrderedPanel.orderedPanelKey,
+      copia.PanelType.name as [Department],
+      copia.Requisition.ProposedDrawStamp,
+      copia.Requisition.orderForStamp,
+      copia.Result.approvedStamp,
+      copia.OrderedPanel.isCancelled,
+      copia.result.techID,
+      copia.staff.firstName,
+      copia.staff.lastName,
+      copia.patient.firstName as [Patient First],
+      copia.patient.lastName as [Patient Last],
+      copia.patient.patientKey
+      FROM copia.OrderedPanel
+          LEFT JOIN copia.result ON copia.orderedpanel.orderedPanelKey = copia.result.orderedPanelKey
+          LEFT JOIN copia.specimen ON copia.orderedpanel.specimenKey = copia.specimen.specimenKey
+          LEFT JOIN copia.staff ON copia.specimen.orderingPhysicianKey = copia.staff.staffKey
+          LEFT JOIN copia.requisition ON copia.result.requisitionKey = copia.Requisition.requisitionKey
+          LEFT JOIN copia.Patient ON copia.requisition.patientKey = copia.patient.patientKey
+          LEFT JOIN copia.Panel ON copia.orderedpanel.panelKey = copia.panel.panelKey
+          LEFT JOIN copia.Panel_PanelType_Map ON copia.Panel_PanelType_Map.panelKey = copia.panel.panelKey
+          LEFT JOIN copia.PanelType ON copia.Panel_PanelType_Map.panelTypeKey = copia.paneltype.panelTypeKey
+      WHERE copia.orderedPanel.isCancelled=0 
+          AND copia.patient.isTestPatient=0 
+          AND copia.result.approvedStamp > ${fromDateUnix}
+          AND copia.result.approvedStamp < ${toDateUnix}
+          AND copia.panel.isReportable = 1
+          AND copia.paneltype.name IS NOT NULL
+          AND NOT copia.panel.name = 'PDF Report'
+      ORDER BY approvedStamp`;
+
+      console.log("Copia Connected Async Await Config Folder....");
+      //const tatClinical, tat
+      const tat = [];
+      for (i = 0; i < terminalQuery.recordset.length; i++) {
+        //if terminalQuery.recordset[i].department === "Clinical"
+        let TATMilliseconds =
+          terminalQuery.recordset[i].approvedStamp -
+          terminalQuery.recordset[i].orderForStamp;
+        tat.push(TATMilliseconds);
+      }
+      let sum = 0;
+      for (i = 0; i < tat.length; i++) {
+        sum += tat[i];
+      }
+      const avg = sum / tat.length;
+      let avgDisplay = moment.duration(parseInt(avg.toFixed()));
+
+      const avgDisplayOne =
+        "Days: " +
+        avgDisplay.days() +
+        " Hours: " +
+        avgDisplay.hours() +
+        " Minutes: " +
+        avgDisplay.minutes();
+
+      res.json(avgDisplayOne);
+      sql.close();
+    } catch (err) {
+      console.error(err.message);
+      //Exit process with failure
+      process.exit(1);
+    }
+  }
+);
+// @route GET api/copiaDb/terminal/listDepartments
+// @desc  GET list of departments at lab
+// @access Private
+//The idea is that this will populate a filterable table
+router.get("/terminal/listDepartments", [auth], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  try {
+    await sql.connect("mssql://Mkorenvaes:oPB2zh@1!t@192.168.191.236/copia");
+    let listDepartmentsQuery = await sql.query`SELECT DISTINCT
+      copia.paneltype.name from copia.PanelType`;
+
+    const departmentFilters = [];
+    for (i = 0; i < listDepartmentsQuery.recordset.length; i++) {
+      departmentFilters.push(listDepartmentsQuery.recordset[i].name);
+    }
+    res.json(departmentFilters);
+    sql.close();
+  } catch (err) {
+    console.error(err.message);
+    //Exit process with failure
+    process.exit(1);
+  }
+});
+
 // @route GET api/copiaDb/terminal/dateSort
 // @desc  GET terminal object
 // @access Private
+//The idea is that this will populate a filterable table
 router.get(
   "/terminal/dateSort",
   [
@@ -40,40 +180,45 @@ router.get(
       .toString();
     //If we still have to use sql database, then we request that everyone on management team have respective credentials?
     try {
-      await sql.connect("mssql://mkorenvaes:R0dm0n88**@192.168.191.42/copia");
+      await sql.connect("mssql://Mkorenvaes:oPB2zh@1!t@192.168.191.236/copia");
       let terminalQuery = await sql.query`SELECT DISTINCT
-          copia.OrderedPanel.labFillerOrderNumber,
-          copia.panel.name,
-          copia.OrderedPanel.orderedPanelKey,
-          copia.Requisition.ProposedDrawStamp,
-          copia.Requisition.orderForStamp,
-          copia.Result.approvedStamp,
-          copia.OrderedPanel.isCancelled,
-          copia.result.techID,
-          copia.staff.firstName,
-          copia.staff.lastName,
-          copia.patient.firstName as [Patient First],
-          copia.patient.lastName as [Patient Last],
-          copia.patient.patientKey
-          FROM copia.OrderedPanel
-              LEFT JOIN copia.result ON copia.orderedpanel.orderedPanelKey = copia.result.orderedPanelKey
-              LEFT JOIN copia.specimen ON copia.orderedpanel.specimenKey = copia.specimen.specimenKey
-              LEFT JOIN copia.staff ON copia.specimen.orderingPhysicianKey = copia.staff.staffKey
-              LEFT JOIN copia.requisition ON copia.result.requisitionKey = copia.Requisition.requisitionKey
-              LEFT JOIN copia.Patient ON copia.requisition.patientKey = copia.patient.patientKey
-              LEFT JOIN copia.Panel ON copia.orderedpanel.panelKey = copia.panel.panelKey
-              LEFT JOIN copia.Panel_PanelType_Map ON copia.Panel_PanelType_Map.panelKey = copia.panel.panelKey
-			        LEFT JOIN copia.PanelType ON copia.Panel_PanelType_Map.panelTypeKey = copia.paneltype.panelTypeKey
-          WHERE copia.orderedPanel.isCancelled=0 
+      copia.OrderedPanel.labFillerOrderNumber,
+      copia.panel.name,
+      copia.OrderedPanel.orderedPanelKey,
+      copia.PanelType.name as [Department],
+      copia.Requisition.ProposedDrawStamp,
+      copia.Requisition.orderForStamp,
+      copia.Result.approvedStamp,
+      copia.OrderedPanel.isCancelled,
+      copia.result.techID,
+      copia.staff.firstName,
+      copia.staff.lastName,
+      copia.patient.firstName as [Patient First],
+      copia.patient.lastName as [Patient Last],
+      copia.patient.patientKey
+      FROM copia.OrderedPanel
+          LEFT JOIN copia.result ON copia.orderedpanel.orderedPanelKey = copia.result.orderedPanelKey
+          LEFT JOIN copia.specimen ON copia.orderedpanel.specimenKey = copia.specimen.specimenKey
+          LEFT JOIN copia.staff ON copia.specimen.orderingPhysicianKey = copia.staff.staffKey
+          LEFT JOIN copia.requisition ON copia.result.requisitionKey = copia.Requisition.requisitionKey
+          LEFT JOIN copia.Patient ON copia.requisition.patientKey = copia.patient.patientKey
+          LEFT JOIN copia.Panel ON copia.orderedpanel.panelKey = copia.panel.panelKey
+          LEFT JOIN copia.Panel_PanelType_Map ON copia.Panel_PanelType_Map.panelKey = copia.panel.panelKey
+          LEFT JOIN copia.PanelType ON copia.Panel_PanelType_Map.panelTypeKey = copia.paneltype.panelTypeKey
+      WHERE copia.orderedPanel.isCancelled=0 
           AND copia.patient.isTestPatient=0 
           AND copia.result.approvedStamp > ${fromDateUnix}
           AND copia.result.approvedStamp < ${toDateUnix}
           AND copia.panel.isReportable = 1
-          ORDER BY approvedStamp`;
+          AND copia.paneltype.name IS NOT NULL
+          AND NOT copia.panel.name = 'PDF Report'
+      ORDER BY approvedStamp`;
+
       console.log("Copia Connected Async Aswait Config Folder....");
       const results = [];
       for (i = 0; i < terminalQuery.recordset.length; i++) {
         let specimenNumber = terminalQuery.recordset[i].labFillerOrderNumber;
+        let department = terminalQuery.recordset[i].Department;
         let patientKey = terminalQuery.recordset[i].patientKey;
         let panelName = terminalQuery.recordset[i].name;
         let collectionTime = moment
@@ -105,6 +250,7 @@ router.get(
         //*****************************CREATION OF TERMINAL OBJECT*****************************************//
         const terminalObject = {
           specimenNumber,
+          department,
           patientKey,
           panelName,
           collectionTime,
@@ -116,9 +262,9 @@ router.get(
           providerLast,
           TAT
         };
+
         results.push(terminalObject);
       }
-
       res.json(results);
       sql.close();
     } catch (err) {
@@ -158,7 +304,7 @@ router.get(
     //format intake time to Unix milliseconds using moment
 
     try {
-      await sql.connect("mssql://mkorenvaes:R0dm0n88**@192.168.191.42/copia");
+      await sql.connect("mssql://Mkorenvaes:oPB2zh@1!t@192.168.191.236/copia");
       let terminalQuery = await sql.query`SELECT DISTINCT
             copia.OrderedPanel.labFillerOrderNumber,
             copia.panel.name,
@@ -291,7 +437,7 @@ router.get(
     //format intake time to Unix milliseconds using moment
 
     try {
-      await sql.connect("mssql://mkorenvaes:R0dm0n88**@192.168.191.42/copia");
+      await sql.connect("mssql://Mkorenvaes:oPB2zh@1!t@192.168.191.236/copia");
       let terminalQuery = await sql.query`SELECT DISTINCT
             copia.OrderedPanel.labFillerOrderNumber,
             copia.panel.name,

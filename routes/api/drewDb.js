@@ -44,4 +44,56 @@ router.get(
   }
 );
 
+router.get(
+  "/terminal/patientLong",
+  [
+    auth,
+    [
+      check("patientId", "Patient ID is required")
+        .not()
+        .isEmpty(),
+      check("orderChoice", "Order Choice is required")
+        .not()
+        .isEmpty()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const url = "mongodb://localhost:27017/";
+    const { patientId, orderChoice } = req.body;
+    //Destructure the req.body
+    //I think this where we plugin the request
+    MongoClient.connect(url, { useUnifiedTopology: true }, function(err, db) {
+      if (err) throw err;
+      const dbo = db.db("admin");
+      dbo
+        .collection("Orders")
+        .find({
+          $and: [{ patientKey: patientId }, { "Order Choice": orderChoice }]
+        })
+        .toArray(function(err, result) {
+          if (err) throw err;
+          const resultObjectArray = [];
+          for (i = 0; i < result.length; i++) {
+            var orderNumber = result[i].labFillerOrderNumber;
+            var patient = result[i].patientKey;
+            var practice = result[i].Practice;
+
+            var resultObject = {
+              patient: patient,
+              order: orderNumber,
+              practice: practice
+            };
+            resultObjectArray.push(resultObject);
+          }
+          res.json(resultObjectArray);
+          db.close();
+        });
+    });
+  }
+);
+
 module.exports = router;

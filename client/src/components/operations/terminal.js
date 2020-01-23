@@ -1,5 +1,7 @@
 import React from "react";
 import Chart from "react-apexcharts";
+import Select from "react-select";
+
 import {
   Container,
   Row,
