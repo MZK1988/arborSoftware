@@ -5,18 +5,107 @@ const auth = require("../../middleware/auth");
 const sql = require("mssql");
 const moment = require("moment");
 
+// @route GET api/copiaDb/terminal/tatByDepartments
+// @desc  GET Average TAT Accross All Departments
+// @access Private
+router.get(
+  "/terminal/tatByDepartments",
+  [
+    auth,
+    [
+      //this will likely be changed into department
+      check("fromDate", "From Date is required")
+        .not()
+        .isEmpty(),
+      //this will likely be changed into a custom tailored list of specialties
+      check("toDate", "To Date is Required")
+        .not()
+        .isEmpty(),
+      check("departmentOne", "department is Required")
+        .not()
+        .isEmpty(),
+      check("departmentTwo", "department is Required")
+        .not()
+        .isEmpty()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { fromDate, toDate, departmentOne, departmentTwo } = req.body;
+    const departments = [];
+    departments.push(departmentOne, departmentTwo);
+    //format intake time to Unix milliseconds using moment
+    const fromDateUnix = moment(fromDate, "M/D/YYYY H:mm")
+      .valueOf()
+      .toString();
+    const toDateUnix = moment(toDate, "M/D/YYYY H:mm")
+      .valueOf()
+      .toString();
+
+    //If # department > 1 for loop to create sql query
+    const departmentQuery = [];
+    if (departments.length > 1) {
+      for (i = 1; i < departments.length; i++) {
+        //
+        let departmentQueryText =
+          "AND copia.PanelType.name = " + departments[i] + " ";
+        departmentQuery.push(departmentQueryText);
+      }
+      let departmentQueryTextInsert = departmentQuery.join();
+      console.log(departmentQueryTextInsert);
+    } else {
+      let departmentQueryTextOne = "AND copia.PanelType.name = " + department;
+      console.log(departmentQueryTextOne);
+    }
+
+    try {
+      await sql.connect("mssql://Mkorenvaes:oPB2zh@1!t@192.168.191.236/copia");
+      let terminalQuery = await sql.query`SELECT DISTINCT
+      copia.PanelType.name as [Department],
+      copia.Requisition.orderForStamp,
+      copia.Result.approvedStamp
+      FROM copia.OrderedPanel
+          LEFT JOIN copia.result ON copia.orderedpanel.orderedPanelKey = copia.result.orderedPanelKey
+          LEFT JOIN copia.requisition ON copia.result.requisitionKey = copia.Requisition.requisitionKey
+          LEFT JOIN copia.Patient ON copia.requisition.patientKey = copia.patient.patientKey
+          LEFT JOIN copia.Panel ON copia.orderedpanel.panelKey = copia.panel.panelKey
+          LEFT JOIN copia.Panel_PanelType_Map ON copia.Panel_PanelType_Map.panelKey = copia.panel.panelKey
+          LEFT JOIN copia.PanelType ON copia.Panel_PanelType_Map.panelTypeKey = copia.paneltype.panelTypeKey
+      WHERE copia.orderedPanel.isCancelled=0 
+          AND copia.patient.isTestPatient=0 
+          AND copia.result.approvedStamp > ${fromDateUnix}
+          AND copia.result.approvedStamp < ${toDateUnix}
+          AND copia.panel.isReportable = 1
+          AND copia.paneltype.name IS NOT NULL
+          AND NOT copia.panel.name = 'PDF Report'
+      ORDER BY approvedStamp`;
+
+      console.log("Copia Connected Async Await Config Folder....");
+      //const tatClinical, tat
+      const tat = [];
+      for (i = 0; i < terminalQuery.recordset.length; i++) {
+        //if terminalQuery.recordset[i].department === "Clinical"
+        let TATMilliseconds =
+          terminalQuery.recordset[i].approvedStamp -
+          terminalQuery.recordset[i].orderForStamp;
+        tat.push(TATMilliseconds);
+      }
+    } catch (err) {
+      console.error(err.message);
+      //Exit process with failure
+      process.exit(1);
+    }
+  }
+);
+
 // @route GET api/copiaDb/terminal/tatDateSort
 // @desc  GET Average TAT Accross All Departments
 // @access Private
 
-//end goal to create object like this:
-//tatObject = {
-//  this week: single total hours value
-//  last week: single total hours value
-//  last month: single total hours value
-//  last qtr: single total hours value
-//  last yr: single total hours value
-//}
 router.get(
   "/terminal/tatDateSort",
   [
