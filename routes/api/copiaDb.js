@@ -38,6 +38,7 @@ router.get(
     const { fromDate, toDate, departmentOne, departmentTwo } = req.body;
     const departments = [];
     departments.push(departmentOne, departmentTwo);
+    console.log(departments);
     //format intake time to Unix milliseconds using moment
     const fromDateUnix = moment(fromDate, "M/D/YYYY H:mm")
       .valueOf()
@@ -46,22 +47,26 @@ router.get(
       .valueOf()
       .toString();
 
-    //If # department > 1 for loop to create sql query
-    const departmentQuery = [];
-    if (departments.length > 1) {
-      for (i = 1; i < departments.length; i++) {
-        //
-        let departmentQueryText =
-          "AND copia.PanelType.name = " + departments[i] + " ";
-        departmentQuery.push(departmentQueryText);
-      }
-      let departmentQueryTextInsert = departmentQuery.join();
-      console.log(departmentQueryTextInsert);
-    } else {
-      let departmentQueryTextOne = "AND copia.PanelType.name = " + department;
-      console.log(departmentQueryTextOne);
-    }
+    // //If # department > 1 for loop to create sql query
+    // const departmentQuery = [];
+    // if (departments.length < 1) {
+    //   let departmentQueryText =
+    //     "AND copia.PanelType.name = " + "'" + departments + "'" + " ";
+    //   departmentQuery.push(departmentQueryText);
+    // } else {
+    //   for (i = 1; i < departments.length; i++) {
+    //     let departmentQueryTextOne =
+    //       "AND copia.PanelType.name = " + "'" + departments[0] + "'" + " ";
+    //     departmentQuery.push(departmentQueryTextOne);
+    //     let departmentQueryTextTwo =
+    //       "OR copia.PanelType.name = " + "'" + departments[i] + "'" + " ";
+    //     departmentQuery.push(departmentQueryTextTwo);
+    //   }
+    // }
 
+    // const departmentQueryTextInsert = departmentQuery.join("");
+    // const departmentQueryTextInsertString = departmentQueryTextInsert.toString();
+    // console.log(departmentQueryTextInsertString);
     try {
       await sql.connect("mssql://Mkorenvaes:oPB2zh@1!t@192.168.191.236/copia");
       let terminalQuery = await sql.query`SELECT DISTINCT
@@ -81,19 +86,42 @@ router.get(
           AND copia.result.approvedStamp < ${toDateUnix}
           AND copia.panel.isReportable = 1
           AND copia.paneltype.name IS NOT NULL
-          AND NOT copia.panel.name = 'PDF Report'
       ORDER BY approvedStamp`;
 
-      console.log("Copia Connected Async Await Config Folder....");
-      //const tatClinical, tat
-      const tat = [];
+      const sortObject = [];
       for (i = 0; i < terminalQuery.recordset.length; i++) {
         //if terminalQuery.recordset[i].department === "Clinical"
-        let TATMilliseconds =
-          terminalQuery.recordset[i].approvedStamp -
-          terminalQuery.recordset[i].orderForStamp;
-        tat.push(TATMilliseconds);
+        for (a = 0; a < departments.length; a++) {
+          if ((terminalQuery.recordset[i].name = departments[a])) {
+            var TATMilliseconds =
+              terminalQuery.recordset[i].approvedStamp -
+              terminalQuery.recordset[i].orderForStamp;
+
+            var departmentInsert = departments[a];
+            var departmentObject = {
+              departmentInsert,
+              TATMilliseconds
+            };
+          }
+        }
+        sortObject.push(departmentObject);
       }
+      console.log(sortObject[0]);
+      // let sum = 0;
+      // for (i = 0; i < sortObject.length; i++) {
+      //   sum += sortObject[i];
+      // }
+      // const avg = sum / sortObject.length;
+      // let avgDisplay = moment.duration(parseInt(avg.toFixed()));
+      // const avgDisplayOne =
+      //   "Days: " +
+      //   avgDisplay.days() +
+      //   " Hours: " +
+      //   avgDisplay.hours() +
+      //   " Minutes: " +
+      //   avgDisplay.minutes();
+      // res.json(avgDisplayOne);
+      sql.close();
     } catch (err) {
       console.error(err.message);
       //Exit process with failure
